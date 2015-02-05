@@ -113,7 +113,7 @@ extension ViewController: NSFetchedResultsControllerDelegate {
 
         switch editingStyle {
         case .Delete:
-            managedObjectContext?.deleteObject(fetchedResultsController?.objectAtIndexPath(indexPath) as Task)
+            managedObjectContext?.deleteObject(fetchedResultsController?.objectAtIndexPath(indexPath) as Category)
             managedObjectContext?.save(nil)
         case .Insert:
             break
