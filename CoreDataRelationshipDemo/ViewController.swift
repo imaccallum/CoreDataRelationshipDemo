@@ -21,12 +21,15 @@ class ViewController: UITableViewController {
         
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest(), managedObjectContext: managedObjectContext!, sectionNameKeyPath: nil, cacheName: nil)
         fetchedResultsController?.delegate = self
-        fetchedResultsController?.performFetch(nil)
+        do {
+            try fetchedResultsController?.performFetch()
+        } catch _ {
+        }
     }
     
     func fetchRequest() -> NSFetchRequest {
         
-        var fetchRequest = NSFetchRequest(entityName: "Category")
+        let fetchRequest = NSFetchRequest(entityName: "Category")
         let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
         
         fetchRequest.predicate = nil
@@ -61,8 +64,8 @@ extension ViewController {
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "TaskSegue" {
-            let destination = segue.destinationViewController as TaskViewController
-            let indexPath = self.tableView?.indexPathForCell(sender as UITableViewCell)
+            let destination = segue.destinationViewController as! TaskViewController
+            let indexPath = self.tableView?.indexPathForCell(sender as! UITableViewCell)
             destination.category = fetchedResultsController?.objectAtIndexPath(indexPath!) as? Category
         }
     }
@@ -82,10 +85,13 @@ extension ViewController: UIAlertViewDelegate {
         
         let cancel = UIAlertAction(title: "Cancel", style: .Cancel) { action in }
         let save = UIAlertAction(title: "Save", style: .Default) { action in
-            let newCategory = NSEntityDescription.insertNewObjectForEntityForName("Category", inManagedObjectContext: self.managedObjectContext!) as Category
-            newCategory.name = (alert.textFields as [UITextField])[0].text
+            let newCategory = NSEntityDescription.insertNewObjectForEntityForName("Category", inManagedObjectContext: self.managedObjectContext!) as! Category
+            newCategory.name = (alert.textFields! as [UITextField])[0].text ?? "unk"
             
-            self.managedObjectContext?.save(nil)
+            do {
+                try self.managedObjectContext?.save()
+            } catch _ {
+            }
         }
         
         alert.addAction(cancel)
@@ -113,8 +119,11 @@ extension ViewController: NSFetchedResultsControllerDelegate {
 
         switch editingStyle {
         case .Delete:
-            managedObjectContext?.deleteObject(fetchedResultsController?.objectAtIndexPath(indexPath) as Category)
-            managedObjectContext?.save(nil)
+            managedObjectContext?.deleteObject(fetchedResultsController?.objectAtIndexPath(indexPath) as! Category)
+            do {
+                try managedObjectContext?.save()
+            } catch _ {
+            }
         case .Insert:
             break
         case .None:
@@ -123,7 +132,6 @@ extension ViewController: NSFetchedResultsControllerDelegate {
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-        
         switch type {
         case NSFetchedResultsChangeType.Insert:
             tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)

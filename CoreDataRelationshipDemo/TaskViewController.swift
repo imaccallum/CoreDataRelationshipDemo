@@ -25,12 +25,15 @@ class TaskViewController: UITableViewController {
         
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest(), managedObjectContext: managedObjectContext!, sectionNameKeyPath: nil, cacheName: nil)
         fetchedResultsController?.delegate = self
-        fetchedResultsController?.performFetch(nil)
+        do {
+            try fetchedResultsController?.performFetch()
+        } catch _ {
+        }
     }
     
     func fetchRequest() -> NSFetchRequest {
         
-        var fetchRequest = NSFetchRequest(entityName: "Task")
+        let fetchRequest = NSFetchRequest(entityName: "Task")
         let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
         
         let predicate = NSPredicate(format: "category == %@", category ?? Category())
@@ -84,8 +87,11 @@ extension TaskViewController: NSFetchedResultsControllerDelegate {
         
         switch editingStyle {
         case .Delete:
-            managedObjectContext?.deleteObject(fetchedResultsController?.objectAtIndexPath(indexPath) as Task)
-            managedObjectContext?.save(nil)
+            managedObjectContext?.deleteObject(fetchedResultsController?.objectAtIndexPath(indexPath) as! Task)
+            do {
+                try managedObjectContext?.save()
+            } catch _ {
+            }
         case .Insert:
             break
         case .None:
@@ -94,7 +100,6 @@ extension TaskViewController: NSFetchedResultsControllerDelegate {
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-        
         switch type {
         case NSFetchedResultsChangeType.Insert:
             tableView.insertRowsAtIndexPaths([newIndexPath!], withRowAnimation: .Fade)
