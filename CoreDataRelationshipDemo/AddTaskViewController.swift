@@ -15,7 +15,10 @@ class AddTaskViewController: UIViewController {
     @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var categoryPicker: UIPickerView!
     
-    let managedObjectContext: NSManagedObjectContext? = (UIApplication.sharedApplication().delegate as? AppDelegate)?.managedObjectContext
+//    let managedObjectContext: NSManagedObjectContext? = (UIApplication.sharedApplication().delegate as? AppDelegate)?.managedObjectContext
+    
+    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
+    
     var categories = [Category]()
     
     override func viewDidLoad() {
@@ -28,15 +31,24 @@ class AddTaskViewController: UIViewController {
         let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
         
-        categories = managedObjectContext?.executeFetchRequest(fetchRequest, error: nil) as [Category]
+        do{
+            // if let fetchResults = try managedObjectContext.executeFetchRequest(fetchRequest) as? [Player] {
+            // categories = try managedObjectContext.executeFetchRequest(fetchRequest) as? [Category]
+            categories = try managedObjectContext?.executeFetchRequest(fetchRequest) as? [Category] ?? [Category]()
+        } catch _ {
+            
+        }
     }
     
     @IBAction func saveButtonPressed(sender: UIBarButtonItem) {
-        let newTask = NSEntityDescription.insertNewObjectForEntityForName("Task", inManagedObjectContext: managedObjectContext!) as Task
-        newTask.title = titleTextField.text
+        let newTask = NSEntityDescription.insertNewObjectForEntityForName("Task", inManagedObjectContext: managedObjectContext!) as! Task
+        newTask.title = titleTextField.text!
         newTask.category = categories[categoryPicker.selectedRowInComponent(0)]
 
-        managedObjectContext?.save(nil)
+        do {
+            try managedObjectContext?.save()
+        } catch _ {
+        }
         dismissViewControllerAnimated(true) {}
     }
     @IBAction func cancelButtonPressed(sender: UIBarButtonItem) {
@@ -54,7 +66,7 @@ extension AddTaskViewController: UIPickerViewDataSource, UIPickerViewDelegate {
         return categories.count
     }
     
-    func pickerView(pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String! {
+    func pickerView(pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return categories[row].name
     }
     
